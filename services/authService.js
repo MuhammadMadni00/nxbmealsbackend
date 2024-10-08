@@ -11,16 +11,14 @@ const loginUser = async (req) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("i am not user");
       throw new Error("User not found");
     }
     const isMatch = bcrypt.compareSync(password, user.password);
-    console.log(user);
     if (!isMatch) {
       throw new Error("Invalid password");
     }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
     return { token };
   } catch (error) {
@@ -38,7 +36,7 @@ const requestPasswordReset = async (req) => {
     });
 
     user.resetToken = resetToken;
-    user.resetTokenExpiration = Date.now() + 900000; // 15 minutes
+    user.resetTokenExpiration = Date.now() + 900000;
     await user.save();
 
     const subject = "Password Reset";
@@ -62,9 +60,7 @@ const resetPassword = async (token, newPassword) => {
       resetTokenExpiration: { $gt: Date.now() },
     });
 
-    // if (!user) throw new Error("Invalid or expired token");
-
-    user.password = newPassword; // Make sure you hash the password before saving
+    user.password = newPassword;
     user.resetToken = undefined;
     user.resetTokenExpiration = undefined;
     await user.save();

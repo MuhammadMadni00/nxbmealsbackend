@@ -1,8 +1,9 @@
 const express = require("express");
 const User = require("../models/User"); // Adjust the path as necessary
+const authenticateToken = require("../middleware/authenticatetoken");
 const router = express.Router();
-
-router.get("/", async (req, res) => {
+//index
+router.get("/", authenticateToken, async (req, res) => {
   try {
     const users = await User.find(
       {},
@@ -22,7 +23,8 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-router.put("/updatestatus", async (req, res) => {
+//update
+router.put("/updatestatus", authenticateToken, async (req, res) => {
   const { email, status } = req.body;
   try {
     const user = await User.findOne({ email: email });
@@ -38,11 +40,11 @@ router.put("/updatestatus", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-router.delete("/delete", async (req, res) => {
+//delete
+router.delete("/delete", authenticateToken, async (req, res) => {
   const { email } = req.body;
   try {
-    console.log("i come to this" + email);
-      const user = await User.findOneAndDelete({ email: email });
+    const user = await User.findOneAndDelete({ email: email });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -52,6 +54,19 @@ router.delete("/delete", async (req, res) => {
   } catch (error) {
     console.error("Error updating user status:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+//show user
+router.get("/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findOne({ employee_id: id });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user data", error: err });
   }
 });
 
